@@ -1,6 +1,6 @@
 
 const { Program } = require('@coral-xyz/anchor')
-const { getConnection, getAssociatedTokenAddress, sumTokens2, getProvider } = require('../helper/solana');
+const { getAssociatedTokenAddress, sumTokens2, getProvider, getMultipleAccounts } = require('../helper/solana');
 const { PublicKey } = require('@solana/web3.js');
 
 const LiquidityBookIdl = {
@@ -74,17 +74,17 @@ const blacklistedTokens = new Set([
   'SarosY6Vscao718M4A778z4CGtvcwcGef5M9MEH1LGL', // projects own token, no enough liqudity on the other side of the pool
   'uniBKsEV37qLRFZD7v3Z9drX6voyiCM8WcaePqeSSLc', // uniBTC wash trading
   'CtzPWv73Sn1dMGVU3ZtLv9yWSyUAanBni19YWDaznnkn', // XBTC was trading
+  'DR5cCdABB5sZjyVF7i3mestghxGzvHawQk35sP9QFNjf', // BFBTC
 ]);
 
 async function tvl() {
 
-  const connection = getConnection();
   const program = new Program(LiquidityBookIdl, getProvider())
   const pairs = await program.account.pair.all();
   console.log(`Found ${pairs.length} accounts for program ${DEX_ID_V3}`);
   let tokens = pairs.map(pair => [pair.account.tokenMintX.toString(), pair.account.tokenMintY.toString()]).flat();
   tokens = [...new Set(tokens)]; // remove duplicates
-  const programAccounts = await connection.getMultipleAccountsInfo(tokens.map(token => new PublicKey(token)));
+  const programAccounts = await getMultipleAccounts(tokens.map(token => new PublicKey(token))); // chunked, rpc caps getMultipleAccounts at 100
   const tokenInfoMap = {};
   programAccounts.forEach((account, index) => {
     if (account) {

@@ -1,4 +1,4 @@
-const { sui } = require("../helper/chain/rpcProxy");
+const sui = require("../helper/chain/sui");
 const { getConfig } = require("../helper/cache");
 const {sumERC4626Vaults} = require("../helper/erc4626");
 
@@ -7,6 +7,10 @@ const SUI_PACKAGE_ID =
 
 const SUI_CHAIN_IDENTIFIER = "sui";
 const ETHEREUM_CHAIN_IDENTIFIER = "ethereum";
+const PHAROS_CHAIN_IDENTIFIER = "pharos";
+const BASE_CHAIN_IDENTIFIER = "base";
+const MONAD_CHAIN_IDENTIFIER = "monad";
+const ARBITRUM_CHAIN_IDENTIFIER = "arbitrum";
 
 // there are only one deposit address
 const blacklistedVaults = [
@@ -15,38 +19,45 @@ const blacklistedVaults = [
 
 async function suiTvl(api) {
   const vaults = (
-    await getConfig('ember-protocol/vaults', `https://vaults.api.sui-prod.bluefin.io/api/v2/vaults`)
+    await getConfig('ember-protocol/vaults', `https://vaults.api.prod.ember.so/api/v2/vaults`)
   );
   for (const vault of Object.values(vaults)) {
-    
+
     const suiVault = vault.detailsByChain[SUI_CHAIN_IDENTIFIER];
-    if (!suiVault || blacklistedVaults.includes(suiVault.address)) {
+    // skip vaults whose receipt coin is not a coin type (malformed api entry, makes get_vault_tvl abort)
+    if (!suiVault || blacklistedVaults.includes(suiVault.address) || !suiVault.receiptCoin?.address?.includes('::')) {
       continue;
     }
-    const vaultTvl = await sui.query({
-      target: `${SUI_PACKAGE_ID}::vault::get_vault_tvl`,
-      contractId: suiVault.address,
+    const initialSharedVersion = await sui.getInitialSharedVersion(suiVault.address);
+    const txBlockBytes = sui.buildProgrammableMoveCallBytes({
+      packageId: SUI_PACKAGE_ID,
+      module: "vault",
+      functionName: "get_vault_tvl",
       typeArguments: [suiVault.baseDepositCoin.address, suiVault.receiptCoin.address],
-      sender:
-        "0xbaef681eafe323b507b76bdaf397731c26f46a311e5f3520ebb1bde091fff295",
+      sharedObjects: [{ objectId: suiVault.address, initialSharedVersion, mutable: false }],
     });
-    api.add(suiVault.baseDepositCoin.address, vaultTvl);
+    const result = await sui.devInspectTransactionBlock(txBlockBytes);
+    const vaultTvl = result?.results?.[0]?.returnValues?.[0]?.[0];
+    if (!Array.isArray(vaultTvl) || vaultTvl.length !== 8) {
+      throw new Error(`Unexpected get_vault_tvl return for ${suiVault.address}: ${JSON.stringify(result?.error ?? result?.results)}`);
+    }
+    api.add(suiVault.baseDepositCoin.address, sui.fromU64(vaultTvl).toString());
   }
 }
 
-async function ethereumTvl(api) {
+async function evmTvl(api, chainIdentifier) {
   const vaults = (
-    await getConfig('ember-protocol/vaults', `https://vaults.api.sui-prod.bluefin.io/api/v2/vaults`)
+    await getConfig('ember-protocol/vaults', `https://vaults.api.prod.ember.so/api/v2/vaults`)
   );
-  const ethereumVaultAddresses = []
+  const vaultAddresses = []
   for (const vault of Object.values(vaults)) {
-      const ethereumVault = vault.detailsByChain[ETHEREUM_CHAIN_IDENTIFIER];
-      if (!ethereumVault) {
+      const chainVault = vault.detailsByChain[chainIdentifier];
+      if (!chainVault) {
         continue;
       }
-      ethereumVaultAddresses.push(ethereumVault.address);
+      vaultAddresses.push(chainVault.address);
   }
-  await sumERC4626Vaults({ api, calls: ethereumVaultAddresses, isOG4626: true});
+  await sumERC4626Vaults({ api, calls: vaultAddresses, isOG4626: true});
 }
 
 module.exports = {
@@ -54,6 +65,18 @@ module.exports = {
     tvl: suiTvl,
   },
   ethereum: {
-    tvl: ethereumTvl,
+    tvl: (api) => evmTvl(api, ETHEREUM_CHAIN_IDENTIFIER),
   },
+  pharos: {
+    tvl: (api) => evmTvl(api, PHAROS_CHAIN_IDENTIFIER),
+  },
+  base: {
+    tvl: (api) => evmTvl(api, BASE_CHAIN_IDENTIFIER),
+  },
+  monad: {
+    tvl: (api) => evmTvl(api, MONAD_CHAIN_IDENTIFIER),
+  },
+  arbitrum: {
+    tvl: (api) => evmTvl(api, ARBITRUM_CHAIN_IDENTIFIER),
+  }
 };

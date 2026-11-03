@@ -4,7 +4,7 @@ const { sumTokensExport, sumTokens2 } = require('../helper/unwrapLPs')
 const LBTCV = '0x5401b8620E5FB570064CA9114fd1e135fd77D57c'       // vault (ETH/Base/BSC)
 const SONIC_VAULT = '0x309f25d839a2fe225e80210e110C99150Db98AAF'  // vault (Sonic)
 
-const LBTC = '0xecAc9C5F704e954931349Da37F60E39f515c11c1'
+const LBTC = ADDRESSES.etlk.LBTC
 
 // ── Add new BoringVault tokens here ──────────────────────────────────────────
 // Unwrapped to underlying base asset in tvlEthExtras.
@@ -133,7 +133,7 @@ module.exports = {
     tvl: composeChainTVL(
       sumTokensExport({
         owners: [LBTCV],
-        tokens: [ADDRESSES.ethereum.WBTC, ADDRESSES.ethereum.LBTC, ADDRESSES.ethereum.cbBTC],
+        tokens: [ADDRESSES.ethereum.WBTC, ADDRESSES.ethereum.LBTC, ADDRESSES.ethereum.cbBTC, '0x13cc1b39cb259ba10cd174eae42012e698ed7c51', '0xf14f678d9c05798ba61652a950a05d74ad2e0a6c'],
         resolveUniV3: true,
       }),
       [tvlEthExtras]
@@ -175,5 +175,5 @@ module.exports = {
     tvl: sumTokensExport({ owners: [SONIC_VAULT], tokens: [ADDRESSES.sonic.LBTC] }),
   },
 
-  methodology: 'TVL = assets in vaults + positions in DeFi protocols.',
+  methodology: 'Bitcoin Earn distributes exposure across a set of isolated sub-vaults run by independent managers, each with its own strategy and risk profile. TVL = assets in vaults + positions in DeFi protocols.',
 }

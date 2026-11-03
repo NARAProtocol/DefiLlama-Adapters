@@ -36,6 +36,7 @@ const CHAINS = [
   'tron',
   'aptos',
   'ripple',
+  'eclipse',
   'plasma',
   'fogo',
   'stable',
@@ -43,10 +44,22 @@ const CHAINS = [
   'hyperliquid',
   'sei',
   'sui',
+  'near',
+  '0g',
+  'tempo',
+  'zcash',
+  'robinhood',
+  'arc',
+  'bitcoincash',
 ]
 
 const CHAIN_BLACKLISTS = {
   ethereum: [ADDRESSES.ethereum.sUSD_OLD],
+}
+
+// 0G native has no entry in coreAssets; tempo native is unpriced and skipped
+const NATIVE_TOKENS = {
+  '0g': [ADDRESSES.null],
 }
 
 CHAINS.forEach((chain) => {
@@ -59,6 +72,7 @@ CHAINS.forEach((chain) => {
       const tokens = [
         ...(Object.values(ADDRESSES[chain] || {})),
         ...(defaultTokens[chain] || []),
+        ...(NATIVE_TOKENS[chain] || []),
       ]
 
       let { owners, fungibleAssets } = entry

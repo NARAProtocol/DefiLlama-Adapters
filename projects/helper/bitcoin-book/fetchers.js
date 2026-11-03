@@ -1,10 +1,25 @@
 const { getConfig, getCache, setCache, } = require('../cache')
-const axios = require('axios');
 const { getEnv } = require('../env')
-const { get } = require('../http')
+const { get, post } = require('../http')
 const sdk = require('@defillama/sdk')
 
 const abi = { getQualifiedUserInfo: 'function getQualifiedUserInfo(address _user) view returns ((bool locked, string depositAddress, string withdrawalAddress) info)' }
+
+const bs58 = require('bs58').default || require('bs58')
+const crypto = require('crypto')
+const sha256 = b => crypto.createHash('sha256').update(b).digest()
+
+function isValidBitcoinAddress(addr) {
+  if (typeof addr !== 'string') return false
+  if (/^bc1[02-9ac-hj-np-z]{6,87}$/.test(addr)) return true
+  try {
+    const decoded = Buffer.from(bs58.decode(addr))
+    if (decoded.length !== 25) return false
+    return sha256(sha256(decoded.subarray(0, 21))).subarray(0, 4).equals(decoded.subarray(21))
+  } catch (e) {
+    return false
+  }
+}
 
 module.exports = {
   btcfi_cdp: async () => {
@@ -24,7 +39,7 @@ module.exports = {
     return btc
   },
   exsatCreditStaking: async () => {
-    const { data: response } = await axios.post('https://rpc-us.exsat.network/v1/chain/get_table_rows', {
+    const response = await post('https://rpc-us.exsat.network/v1/chain/get_table_rows', {
       json: true,
       code: "custody.xsat",
       scope: "custody.xsat",
@@ -52,6 +67,34 @@ module.exports = {
     const userInfos = await api.multiCall({ abi: abi.getQualifiedUserInfo, target: '0xbee335BB44e75C4794a0b9B54E8027b111395943', calls: users })
     userInfos.forEach(i => staticAddresses.push(i.depositAddress))
     return Array.from(new Set(staticAddresses))
+  },
+
+  wbtc: async () => {
+    const owners = await getConfig('wbtc/custody-addresses', undefined, {
+      fetcher: async () => {
+        const { data: { natives } } = await get('https://openapi.wbtc.network/public/v1/chains')
+        const addresses = new Set()
+        const failed = []
+        for (const { chainKey } of natives) {
+          try {
+            const { result } = await get(`https://wbtc.network/api/chain/${chainKey}/token/wbtc/addresses`)
+            result.filter(i => i.chain === 'btc' && i.type === 'custodial' && isValidBitcoinAddress(i.address))
+              .forEach(i => addresses.add(i.address))
+          } catch (e) {
+            failed.push(chainKey)
+            sdk.log('wbtc: skipping chain', chainKey, e.message)
+          }
+        }
+        if (!addresses.size) throw new Error('wbtc: feed returned no custody addresses')
+        // the eth feed alone carries ~95% of the addresses, so a failed chain must not overwrite a good cache
+        const prior = await getCache('config-cache', 'wbtc/custody-addresses')
+        if (failed.length && Array.isArray(prior) && addresses.size < prior.length * 0.9)
+          throw new Error(`wbtc: ${failed.join(', ')} failed and list shrank ${prior.length} -> ${addresses.size}, keeping cache`)
+        return [...addresses]
+      }
+    })
+    if (!owners.length) throw new Error('wbtc: no custody addresses available')
+    return owners
   },
 
   b14g: async () => {
@@ -124,6 +167,9 @@ module.exports = {
 
         while (hasMore) {
           const { addresses: data, has_more } = await get(`${API_URL}?limit=${BATCH_SIZE}&offset=${offset}`);
+          if (!Array.isArray(data)) throw new Error(`lombard: bad address page at offset ${offset}`)
+          if (has_more && data.length < BATCH_SIZE)
+            throw new Error(`lombard: short page (${data.length}) at offset ${offset} with has_more set`)
           const newAddresses = data.map(a => a.btc_address);
 
           allAddresses.push(...newAddresses);
@@ -146,8 +192,8 @@ module.exports = {
     const API_URL = 'https://dashboard.pumpbtc.xyz/api/dashboard/asset/tokenowners'
     return getConfig('pumpbtc/v2', undefined, {
       fetcher: async () => {
-        const { data } = await axios.get(API_URL)
-        return data.data.bitcoin.owners
+        const { data } = await get(API_URL)
+        return data.bitcoin.owners
       }
     })
   },
@@ -182,7 +228,7 @@ module.exports = {
       let hasMore = true;
 
       while (hasMore) {
-        const { data: response } = await axios.post(API2_URL, {
+        const response = await post(API2_URL, {
           "json": true,
           "code": "brdgmng.xsat",
           "scope": custody_id,
@@ -222,8 +268,7 @@ module.exports = {
   btnx: async () => {
     const staticAddresses = await getConfig('btnx', undefined, {
       fetcher: async () => {
-        const { data } = await axios.get('https://sidecar.botanixlabs.com/api/addressList', {
-        })
+        const data = await get('https://sidecar.botanixlabs.com/api/addressList')
         return data.map(address => address)
       }
     })
@@ -231,25 +276,33 @@ module.exports = {
     return Array.from(new Set(staticAddresses))
   },
   zeusZBTC: async () => {
-    const API_URL = 'https://indexer.zeuslayer.io/api/v2/chainlink/proof-of-reserves'
-    const data = await getConfig('zeus/zbtc', API_URL)
-    const list = data.result.map(item => item.address)
-    return list
+    // indexer.zeuslayer.io is gone; reserve addresses from https://zeusnetwork.xyz/developers/bitcoin-on-chain-por-hioggkgl
+    return [
+      'bc1p698gf9gm8j34gvars97j6spsgrlxlhvyfajt2tsz2vnw9fcat9cqjcjn4v', // Zeus Foundation (Guardian)
+      'bc1p96utmwdngv3xwdn90d7wg4tyqke70fs6js8ajgqkk89zn08z8d5q8xzchd', // Mechanism Capital (Guardian)
+      'bc1pd46txhc0a3t8juc2r4njyuk4rv3099dcn039ny0hzgt24tgx3qlszg5e6f', // Animoca Ventures (Guardian)
+      'bc1p795t8whcfpl6uyxj38enzt43cg8scphrgvn2e79y3xgflv6s6nrsrmudk6', // Anagram (Guardian)
+      'bc1pq7pr972ckfwrwrprqw5en54ytr58jndcaafr780hm35ttz4ekmas3fctx4', // Axia8 (Guardian)
+      'bc1qlw9h7fspehfvrgyhnr334936y2x6vurw7svxq3', // Institutional #1
+      'bc1purewdvplqykhwp90fenpqjd0sksw7uzvuwxv9guffkf0ma7hurtsys9ey0', // guardian reserves were swept here on 2025-11-18, pays out redemptions
+    ]
   },
   binanceFetcher: async () => {
     const staticAddresses = await getConfig('binance-cex/btc', undefined, {
       fetcher: async () => {
-        const { data } = await axios.get('https://www.binance.com/bapi/apex/v1/public/apex/market/por/address')
-        return data.data.filter(i => i.network === 'BTC').map(item => item.address)
+        const { data } = await get('https://www.binance.com/bapi/apex/v1/public/apex/market/por/address')
+        return data.filter(i => i.network === 'BTC').map(item => item.address)
       }
     })
-    return Array.from(new Set(staticAddresses))
+    // listed in Binance PoR snapshot (2026-10-31, Ceffu custody) but missing from the PoR api
+    const extraAddresses = ['bc1qcpkpym5d3k4pjgz9dwk3xnasefgshd3nq5js0s']
+    return Array.from(new Set([...staticAddresses, ...extraAddresses]))
   },
   vishwa: async () => {
     const staticAddresses = await getConfig('vishwa', undefined, {
       fetcher: async () => {
-        const { data } = await axios.get('https://api.btcvc.vishwanetwork.xyz/btc/address')
-        return data.data
+        const { data } = await get('https://vault.vishwalab.com/vapi/btc/address')
+        return data
       }
     })
     return Array.from(new Set(staticAddresses))
@@ -257,7 +310,7 @@ module.exports = {
   yala: async () => {
     const staticAddresses = await getConfig('yala/bitcoin', undefined, {
       fetcher: async () => {
-        const { data } = await axios.get('https://raw.githubusercontent.com/yalaorg/yala-defillama/refs/heads/main/config.json')
+        const data = await get('https://raw.githubusercontent.com/yalaorg/yala-defillama/refs/heads/main/config.json')
         return data.bitcoin
       }
     })
@@ -272,8 +325,18 @@ module.exports = {
     })
   },
   teleswap: async () => {
-    const  { data: { lockers } } = await getConfig('yala/bitcoin', 'https://api.teleportdao.xyz/api/v1/teleswap/lockers/')
+    const  { data: { lockers } } = await getConfig('teleswap/bitcoin', 'https://api.teleportdao.xyz/api/v1/teleswap/lockers/')
     return lockers.filter(l => l.type === 'BTC').map(l => l.sourceAddress)
+  },
+  rskBridge: async (api) => {
+    return getConfig('rsk-bridge', undefined, {
+      fetcher: async () => {
+        api = new sdk.ChainApi({ chain: 'rsk', timestamp: api?.timestamp })
+        await api.getBlock()
+        const addr = await api.call({  abi: 'string:getFederationAddress', target:'0x0000000000000000000000000000000001000006' })
+        return [addr]
+      }
+    })
   },
   zenrock: async () => {
     const ZRCHAIN_WALLETS_API = 'https://api.diamond.zenrocklabs.io/zrchain/treasury/zenbtc_wallets';
@@ -354,5 +417,39 @@ module.exports = {
         return allAddresses;
       }
     });
+  },
+  coinbasebtc: async () => {
+    const { reserveAddresses = [] } = await getConfig(
+      'coinbase-cbbtc-proof-of-reserves',
+      'https://www.coinbase.com/cbbtc/proof-of-reserves.json'
+    )
+    return reserveAddresses.map(r => r.address).filter(Boolean)
+  },
+  coinbaseltc: async () => {
+    const { reserveAddresses = [] } = await getConfig(
+      'coinbase-cbltc-proof-of-reserves',
+      'https://www.coinbase.com/cbltc/proof-of-reserves.json'
+    )
+    return reserveAddresses.map(r => r.address).filter(Boolean)
+  },
+  bitsafeCBTC: async () => {
+    // BitSafe publishes the CBTC (Canton) reserve addresses through its public API. Balances are NOT read
+    // from that API: the addresses are only enumerated here and their BTC is read from the Bitcoin chain.
+    const API_URL = 'https://api.mainnet.bitsafe.finance/cbtc/v1/address-calculation-data'
+    const owners = await getConfig('bitsafe/cbtc-reserve-addresses', undefined, {
+      fetcher: async () => {
+        const data = await get(API_URL)
+        if (data?.status !== 'ready' || data.bitcoin_network !== 'bitcoin')
+          throw new Error('bitsafe cbtc: address feed is not ready for bitcoin mainnet')
+        const chain = (data.chains ?? []).find(c => c.chain === 'canton-mainnet')
+        const addresses = (chain?.addresses ?? []).map(a => a.address_for_verification)
+        if (!addresses.length) throw new Error('bitsafe cbtc: feed returned no reserve addresses')
+        // a partial reserve list would understate TVL, so one bad entry fails the whole fetch
+        if (!addresses.every(isValidBitcoinAddress)) throw new Error('bitsafe cbtc: feed returned an invalid bitcoin address')
+        return [...new Set(addresses)]
+      }
+    })
+    if (!Array.isArray(owners) || !owners.length) throw new Error('bitsafe cbtc: no reserve addresses available')
+    return owners
   },
 }

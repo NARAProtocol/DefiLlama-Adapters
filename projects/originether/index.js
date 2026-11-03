@@ -10,13 +10,11 @@ const ethTvl = async (api) => {
   const vault = "0x39254033945aa2e4809cc2977e7087bee48bd7ab";
   const strategies = await api.call({ abi: 'function getAllStrategies() view returns (address[])', target: vault })
   const isNativeStrategy = (await api.multiCall({  abi: 'uint256:activeDepositedValidators', calls: strategies, permitFailure: true})).map(i => !!i)
-  const nativeStrategies = strategies.filter((_, i) => isNativeStrategy[i])
+  // compounding staking strategies don't have activeDepositedValidators(), detect them via their BEACON_PROOFS getter
+  const isCompoundingStrategy = (await api.multiCall({  abi: 'address:BEACON_PROOFS', calls: strategies, permitFailure: true})).map(i => !!i)
+  const nativeStrategies = strategies.filter((_, i) => isNativeStrategy[i] || isCompoundingStrategy[i])
 
-  // vault balance
-  const vaultBalance = await api.call({ abi: 'erc20:balanceOf', target: ADDRESSES.ethereum.WETH, params: vault })
-  api.add(ADDRESSES.ethereum.WETH, vaultBalance)
-
-  // add native strategies
+  // add native & compounding staking strategies
   for(const nativeStrategy of nativeStrategies) {
     const stakingBalance = await api.call({ abi: abi.checkBalance, target: nativeStrategy, params: ADDRESSES.ethereum.WETH })
     api.add(ADDRESSES.ethereum.WETH, stakingBalance)
@@ -51,7 +49,10 @@ const ethTvl = async (api) => {
 
 async function baseTvl(api) {
   const vault = '0x98a0CbeF61bD2D21435f433bE4CD42B56B38CC93'
-  const woethStrategy = '0x80c864704dd06c3693ed5179190786ee38acf835'
+  const woethStrategies = [
+  '0x80c864704dd06c3693ed5179190786ee38acf835', // Legacy
+  '0xa03360b3f6d902f1b3334c0adbd5c6995d3513fe',
+]
   const curveAMO = '0x9cfcAF81600155e01c63e4D2993A8A81A8205829'
   const aeroAMO = '0xF611cC500eEE7E4e4763A05FE623E2363c86d2Af'
   const curveGauge = '0x9da8420dbeebdfc4902b356017610259ef7eedd8'
@@ -64,7 +65,7 @@ async function baseTvl(api) {
   api.add(ADDRESSES.base.WETH, vaultBalance)
 
   for (const strategy of strategies) {
-    if (strategy.toLowerCase() === woethStrategy.toLowerCase()) continue
+    if (woethStrategies.includes(strategy.toLowerCase())) continue
     if (strategy.toLowerCase() === curveAMO.toLowerCase()) {
       // only count WETH side: our share of gauge, gauge's share of pool, pool WETH balance
       const ourGaugeBal = await api.call({ abi: 'erc20:balanceOf', target: curveGauge, params: curveAMO })
@@ -89,9 +90,6 @@ async function baseTvl(api) {
 
 async function plumeTvl(api) {
   const vault = '0xc8c8F8bEA5631A8AF26440AF32a55002138cB76a'
-
-  const vaultBalance = await api.call({ abi: 'erc20:balanceOf', target: ADDRESSES.plume_mainnet.WETH, params: vault })
-  api.add(ADDRESSES.plume_mainnet.WETH, vaultBalance)
 
   return api.sumTokens({ owners: [vault], tokens: [ADDRESSES.plume_mainnet.WETH] })
 }

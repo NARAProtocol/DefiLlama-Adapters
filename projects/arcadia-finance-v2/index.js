@@ -2,31 +2,112 @@ const { sumTokens2, unwrapSlipstreamNFT } = require("../helper/unwrapLPs");
 const utils = require('../helper/utils')
 
 const config = {
-  factory: "0xDa14Fdd72345c4d2511357214c5B89A919768e59",
-  uniNFT: "0x03a520b32c04bf3beef7beb72e919cf822ed34f1",
-  uniV4NFT: "0x7C5f5A4bBd8fD63184577525326123B519429bDc",
-  alienBaseNFT: "0xb7996d1ecd07fb227e8dca8cd5214bdfb04534e5",
-  slipNFT: "0x827922686190790b37229fd06084350e74485b72",
-  slipV2NFT: "0xa990C6a764b73BF43cee5Bb40339c3322FB9D55F",
-  wAeroNFT: "0x17B5826382e3a5257b829cF0546A08Bd77409270".toLowerCase(),
-  sAeroNFT: "0x9f42361B7602Df1A8Ae28Bf63E6cb1883CD44C27".toLowerCase(),
-  sSlipNFT: "0x1Dc7A0f5336F52724B650E39174cfcbbEdD67bF1".toLowerCase(),
-  sSlipV2NFT: "0xBed6C3E35B9B1e044b3Bc71465769EdFDC0FDD4c".toLowerCase(),
-  wsSlipNFT: "0xD74339e0F10fcE96894916B93E5Cc7dE89C98272".toLowerCase(),
-  wsSlipV2NFT: "0x147a2ccbaf4521ad209a2875ae0b3c496f4b25a4".toLowerCase(),
-  pools: [
-    "0x803ea69c7e87D1d6C86adeB40CB636cC0E6B98E2", // wethPool
-    "0x3ec4a293Fb906DD2Cd440c20dECB250DeF141dF1", // usdcPool
-    "0xa37E9b4369dc20940009030BfbC2088F09645e3B"  // cbbtcPool
-  ]
+  base: {
+    chainId: 8453,
+    factory: "0xDa14Fdd72345c4d2511357214c5B89A919768e59",
+    uniNFT: "0x03a520b32C04BF3bEEf7BEb72E919cf822Ed34f1",
+    uniV4NFT: "0x7C5f5A4bBd8fD63184577525326123B519429bDc",
+    alienBaseNFT: "0xb7996d1ecd07fb227e8dca8cd5214bdfb04534e5",
+    slipNFT: "0x827922686190790b37229fd06084350e74485b72",
+    slipV2NFT: "0xa990C6a764b73BF43cee5Bb40339c3322FB9D55F",
+    slipV3NFT: "0xe1f8cd9AC4e4A65F54f38a5CdAfCA44f6dD68b53",
+    wAeroNFT: "0x17B5826382e3a5257b829cF0546A08Bd77409270".toLowerCase(),
+    sAeroNFT: "0x9f42361B7602Df1A8Ae28Bf63E6cb1883CD44C27".toLowerCase(),
+    sSlipNFT: "0x1Dc7A0f5336F52724B650E39174cfcbbEdD67bF1".toLowerCase(),
+    sSlipV2NFT: "0xBed6C3E35B9B1e044b3Bc71465769EdFDC0FDD4c".toLowerCase(),
+    sSlipV3NFT: "0xE0F20BE5886F11CbcD2cb5bA9987Bcbbf1d8ca7b".toLowerCase(),
+    wsSlipNFT: "0xD74339e0F10fcE96894916B93E5Cc7dE89C98272".toLowerCase(),
+    wsSlipV2NFT: "0x147a2ccbaf4521ad209a2875ae0b3c496f4b25a4".toLowerCase(),
+    wsSlipV3NFT: "0x9189BC25f8faC157B4D87b0b3c14F56bA1477d53".toLowerCase(),
+    metadexCLNFT: "0x4857DB576eE0e45F10525eC59527BfD10beeC60b",
+    sMetadexCLNFT: "0x0f34F7F7B558F43a821AF4181f0F8e5bC4B74892".toLowerCase(),
+    wsMetadexCLNFT: "0x323808A037628F2BaF4F42784E011FCf9C49A88b".toLowerCase(),
+    wMetadexNFT: "0x7cb5383BBa39b1634DA39f104364203846c240d9".toLowerCase(), // WrappedMetadex03AM
+    sMetadexNFT: "0x3964135f8E8A356231459c86e65f51a599F2Bbb2".toLowerCase(), // StakedMetadex03AM
+    wMetadexSpotNFT: "0xd3C5c8a4dDeB05d22646D04DA65220218FbE7919".toLowerCase(), // WrappedMetadex
+    wsMetadexNFT: "0x401875CD07c804aC887DC9eCE3D631b80dF24fAd".toLowerCase(), // WrappedStakedMetadex
+    pools: [
+      "0x803ea69c7e87D1d6C86adeB40CB636cC0E6B98E2", // wethPool
+      "0x3ec4a293Fb906DD2Cd440c20dECB250DeF141dF1", // usdcPool
+      "0xa37E9b4369dc20940009030BfbC2088F09645e3B", // cbbtcPool
+    ],
+    resolveSlipstreamV2: true,
+    resolveSlipstreamV3: true,
+  },
+  optimism: {
+    chainId: 10,
+    factory: "0xDa14Fdd72345c4d2511357214c5B89A919768e59",
+    uniNFT: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
+    uniV4NFT: "0x3C3Ea4B57a46241e54610e5f022E5c45859A1017",
+    slipNFT: "0x416b433906b1B72FA758e166e239c43d68dC6F29",
+    slipV3NFT: "0xf7f8ccce99Ca2896eC75D3A399D152dB96808399",
+    wAeroNFT: "0x17B5826382e3a5257b829cF0546A08Bd77409270".toLowerCase(),
+    sAeroNFT: "0x9f42361B7602Df1A8Ae28Bf63E6cb1883CD44C27".toLowerCase(),
+    sSlipNFT: "0x1Dc7A0f5336F52724B650E39174cfcbbEdD67bF1".toLowerCase(),
+    sSlipV3NFT: "0xF6a87d944204bb5Fdb9CF5534c03c46895f78eCd".toLowerCase(),
+    wsSlipNFT: "0xD74339e0F10fcE96894916B93E5Cc7dE89C98272".toLowerCase(),
+    wsSlipV3NFT: "0xC4D3d804ed64C1f78097799208D46b1db4252749".toLowerCase(),
+    metadexCLNFT: "0x4857DB576eE0e45F10525eC59527BfD10beeC60b",
+    sMetadexCLNFT: "0x0f34F7F7B558F43a821AF4181f0F8e5bC4B74892".toLowerCase(),
+    wsMetadexCLNFT: "0x323808A037628F2BaF4F42784E011FCf9C49A88b".toLowerCase(),
+    wMetadexNFT: "0x7cb5383BBa39b1634DA39f104364203846c240d9".toLowerCase(), // WrappedMetadex03AM
+    sMetadexNFT: "0x3964135f8E8A356231459c86e65f51a599F2Bbb2".toLowerCase(), // StakedMetadex03AM
+    wMetadexSpotNFT: "0xd3C5c8a4dDeB05d22646D04DA65220218FbE7919".toLowerCase(), // WrappedMetadex
+    wsMetadexNFT: "0x401875CD07c804aC887DC9eCE3D631b80dF24fAd".toLowerCase(), // WrappedStakedMetadex
+    pools: [
+      "0x803ea69c7e87D1d6C86adeB40CB636cC0E6B98E2", // wethPool
+      "0x3ec4a293Fb906DD2Cd440c20dECB250DeF141dF1", // usdcPool
+    ],
+    resolveSlipstreamV2: false,
+    resolveSlipstreamV3: true,
+  },
+  robinhood: {
+    chainId: 4663,
+    factory: "0xDa14Fdd72345c4d2511357214c5B89A919768e59",
+    uniNFT: "0x73991a25C818Bf1f1128dEAaB1492D45638DE0D3",
+    uniV4NFT: "0x58daec3116aae6D93017bAAea7749052E8a04fA7",
+    // Robinhood has Aero's Metadex (CL and vanilla pools) but no Slipstream V1-V3 or Aerodrome V1 deployment.
+    metadexCLNFT: "0x4857DB576eE0e45F10525eC59527BfD10beeC60b",
+    sMetadexCLNFT: "0x0f34F7F7B558F43a821AF4181f0F8e5bC4B74892".toLowerCase(),
+    wsMetadexCLNFT: "0x323808A037628F2BaF4F42784E011FCf9C49A88b".toLowerCase(),
+    wMetadexNFT: "0x7cb5383BBa39b1634DA39f104364203846c240d9".toLowerCase(), // WrappedMetadex03AM
+    sMetadexNFT: "0x3964135f8E8A356231459c86e65f51a599F2Bbb2".toLowerCase(), // StakedMetadex03AM
+    wMetadexSpotNFT: "0xd3C5c8a4dDeB05d22646D04DA65220218FbE7919".toLowerCase(), // WrappedMetadex
+    wsMetadexNFT: "0x401875CD07c804aC887DC9eCE3D631b80dF24fAd".toLowerCase(), // WrappedStakedMetadex
+    pools: [
+      "0x803ea69c7e87D1d6C86adeB40CB636cC0E6B98E2", // wethPool
+      "0xf37c0C5996503Fdd2b5CCCE36E659cD30393AE59", // usdgPool
+    ],
+    resolveSlipstreamV2: false,
+    resolveSlipstreamV3: false,
+  },
+  unichain: {
+    chainId: 130,
+    factory: "0xDa14Fdd72345c4d2511357214c5B89A919768e59",
+    uniNFT: "0x943e6e07a7E8E791dAFC44083e54041D743C46E9",
+    uniV4NFT: "0x4529A01c7A0410167c5740C487A8DE60232617bf",
+    slipNFT: "0x991d5546C4B442B4c5fdc4c8B8b8d131DEB24702",
+    wAeroNFT: "0x17B5826382e3a5257b829cF0546A08Bd77409270".toLowerCase(),
+    sAeroNFT: "0x9f42361B7602Df1A8Ae28Bf63E6cb1883CD44C27".toLowerCase(),
+    sSlipNFT: "0x1Dc7A0f5336F52724B650E39174cfcbbEdD67bF1".toLowerCase(),
+    wsSlipNFT: "0xD74339e0F10fcE96894916B93E5Cc7dE89C98272".toLowerCase(),
+    pools: [],
+    resolveSlipstreamV2: false,
+  },
 };
 
-async function unwrapArcadiaAeroLP({ api, ownerIds }) {
-  const { wAeroNFT, sAeroNFT, sSlipNFT, sSlipV2NFT, wsSlipNFT, wsSlipV2NFT, slipNFT, slipV2NFT } = config
+async function unwrapArcadiaAeroLP({ api, ownerIds, chainConfig }) {
+  const { wAeroNFT, sAeroNFT, sSlipNFT, sSlipV2NFT, sSlipV3NFT, wsSlipNFT, wsSlipV2NFT, wsSlipV3NFT, slipNFT, slipV2NFT, slipV3NFT, metadexCLNFT, sMetadexCLNFT, wsMetadexCLNFT, wMetadexNFT, sMetadexNFT, wMetadexSpotNFT, wsMetadexNFT } = chainConfig
   const wAERONFTIds = []
   const sAERONFTIds = []
+  const wMetadexNftIds = []
+  const sMetadexNftIds = []
+  const wMetadexSpotNftIds = []
+  const wsMetadexNftIds = []
   const sSlipNftIds = []
   const sSlipV2NftIds = []
+  const sSlipV3NftIds = []
+  const sMetadexCLNftIds = []
 
   // for each asset address owned by an account
   // check if the asset is the wrapped or staked aero asset module
@@ -43,11 +124,26 @@ async function unwrapArcadiaAeroLP({ api, ownerIds }) {
         case sAeroNFT:
           sAERONFTIds.push(ids[i]);
           break;
+        case wMetadexNFT:
+          wMetadexNftIds.push(ids[i]);
+          break;
+        case sMetadexNFT:
+          sMetadexNftIds.push(ids[i]);
+          break;
+        case wMetadexSpotNFT:
+          wMetadexSpotNftIds.push(ids[i]);
+          break;
+        case wsMetadexNFT:
+          wsMetadexNftIds.push(ids[i]);
+          break;
         case sSlipNFT:
           sSlipNftIds.push(ids[i]);
           break;
         case sSlipV2NFT:
           sSlipV2NftIds.push(ids[i]);
+          break;
+        case sSlipV3NFT:
+          sSlipV3NftIds.push(ids[i]);
           break;
         case wsSlipNFT:
           sSlipNftIds.push(ids[i]);
@@ -55,17 +151,45 @@ async function unwrapArcadiaAeroLP({ api, ownerIds }) {
         case wsSlipV2NFT:
           sSlipV2NftIds.push(ids[i]);
           break;
+        case wsSlipV3NFT:
+          sSlipV3NftIds.push(ids[i]);
+          break;
+        case sMetadexCLNFT:
+          sMetadexCLNftIds.push(ids[i]);
+          break;
+        case wsMetadexCLNFT:
+          sMetadexCLNftIds.push(ids[i]);
+          break;
       }
     }
   }
 
-  const wrappedData = await api.multiCall({ abi: abi.positionState, calls: wAERONFTIds, target: wAeroNFT });
-  const stakedData = await api.multiCall({ abi: abi.stakedAeroPositionState, calls: sAERONFTIds, target: sAeroNFT });
-  wrappedData.forEach((data) => api.add(data.pool, data.amountWrapped));
-  stakedData.forEach((data) => api.add(data.pool, data.amountStaked));
+  // Aerodrome V1 and Metadex vanilla wrappers share one positionState layout, as do their staking modules
+  const wrappedModules = [[wAeroNFT, wAERONFTIds], [wMetadexNFT, wMetadexNftIds], [wMetadexSpotNFT, wMetadexSpotNftIds]]
+  const stakedModules = [[sAeroNFT, sAERONFTIds], [sMetadexNFT, sMetadexNftIds], [wsMetadexNFT, wsMetadexNftIds]]
+  for (const [target, calls] of wrappedModules) {
+    if (!target || !calls.length) continue;
+    const wrappedData = await api.multiCall({ abi: abi.positionState, calls, target });
+    wrappedData.forEach((data) => api.add(data.pool, data.amountWrapped));
+  }
+  for (const [target, calls] of stakedModules) {
+    if (!target || !calls.length) continue;
+    const stakedData = await api.multiCall({ abi: abi.stakedAeroPositionState, calls, target });
+    stakedData.forEach((data) => api.add(data.pool, data.amountStaked));
+  }
 
-  await uwrapStakedSlipstreamLP({ api, sSlipNftIds, nft: slipNFT });
-  await uwrapStakedSlipstreamLP({ api, sSlipV2NftIds, nft: slipV2NFT });
+  if (slipNFT) {
+    await uwrapStakedSlipstreamLP({ api, sSlipNftIds, nft: slipNFT });
+  }
+  if (slipV2NFT) {
+    await uwrapStakedSlipstreamLP({ api, sSlipNftIds: sSlipV2NftIds, nft: slipV2NFT });
+  }
+  if (slipV3NFT) {
+    await uwrapStakedSlipstreamLP({ api, sSlipNftIds: sSlipV3NftIds, nft: slipV3NFT });
+  }
+  if (metadexCLNFT) {
+    await uwrapStakedSlipstreamLP({ api, sSlipNftIds: sMetadexCLNftIds, nft: metadexCLNFT });
+  }
 }
 
 async function uwrapStakedSlipstreamLP({ api, sSlipNftIds, nft, }) {
@@ -75,15 +199,54 @@ async function uwrapStakedSlipstreamLP({ api, sSlipNftIds, nft, }) {
   await unwrapSlipstreamNFT({ api, positionIds: sSlipNftIds, nftAddress: nft, });
 }
 
+/**
+ * Fetch spot asset data for one group of accounts from Arcadia's API.
+ * Retries network errors, 408, 429 and 5xx up to three times, then throws so a
+ * failed group is never dropped from the chain total.
+ * @param {string[]} accountGroup account addresses sent in a single request
+ * @param {number} chainId Arcadia chain id
+ * @returns {Promise<object>} API response
+ */
+async function fetchAssetData(accountGroup, chainId) {
+  const addressParams = accountGroup.map(addr => `account_addresses=${addr}`).join('&');
+  let lastError;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      return await utils.fetchURL(`https://api.arcadia.finance/v1/api/accounts/spot_asset_data?${addressParams}&chain_id=${chainId}`);
+    } catch (error) {
+      lastError = error;
+      const status = error.response?.status;
+      if (status && status !== 408 && status !== 429 && status < 500) throw error;
+      if (attempt < 2) {
+        const retryAfter = error.response?.headers?.['retry-after'];
+        const seconds = Number(retryAfter);
+        const headerDelay = Number.isFinite(seconds) ? seconds * 1000 : Date.parse(retryAfter) - Date.now();
+        // clamp valid Retry-After to 30s max: wait the full allowed time instead of short backoff
+        const delay = headerDelay > 30000 ? 30000 : headerDelay > 0 ? headerDelay : 1000 * 2 ** attempt;
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+  throw lastError;
+}
+
+/**
+ * Sums the value of every Arcadia account plus the protocol's own pools on one chain.
+ * @param {object} api DefiLlama ChainApi
+ */
 async function tvl (api) {
-  const { factory, pools, uniNFT, uniV4NFT, slipNFT, slipV2NFT, wAeroNFT, sAeroNFT, sSlipNFT, sSlipV2NFT, alienBaseNFT, wsSlipNFT, wsSlipV2NFT } = config;
+  const chainConfig = config[api.chain];
+  const { factory, pools, uniNFT, uniV4NFT, slipNFT, slipV2NFT, slipV3NFT, wAeroNFT, sAeroNFT, sSlipNFT, sSlipV2NFT, sSlipV3NFT, alienBaseNFT, wsSlipNFT, wsSlipV2NFT, wsSlipV3NFT, metadexCLNFT, sMetadexCLNFT, wsMetadexCLNFT, wMetadexNFT, sMetadexNFT, wMetadexSpotNFT, wsMetadexNFT, resolveSlipstreamV2, resolveSlipstreamV3, chainId } = chainConfig;
+  const allNfts = [uniNFT, uniV4NFT, slipNFT, slipV2NFT, slipV3NFT, wAeroNFT, sAeroNFT, sSlipNFT, sSlipV2NFT, sSlipV3NFT, alienBaseNFT, wsSlipNFT, wsSlipV2NFT, wsSlipV3NFT, metadexCLNFT, sMetadexCLNFT, wsMetadexCLNFT, wMetadexNFT, sMetadexNFT, wMetadexSpotNFT, wsMetadexNFT].filter(Boolean);
   const ownerTokens = []
   const ownerIds = []
   const accs = []
   const uniV4Ids = []
 
-  const uTokens = await api.multiCall({ abi: "address:asset", calls: pools });
-  await api.sumTokens({ blacklistedTokens: [uniNFT, uniV4NFT, slipNFT, slipV2NFT, wAeroNFT, sAeroNFT, sSlipNFT, sSlipV2NFT, alienBaseNFT, wsSlipNFT, wsSlipV2NFT], tokensAndOwners2: [uTokens, pools] });
+  if (pools.length > 0) {
+    const uTokens = await api.multiCall({ abi: "address:asset", calls: pools });
+    await api.sumTokens({ blacklistedTokens: allNfts, tokensAndOwners2: [uTokens, pools] });
+  }
 
   const accounts = await api.fetchList({ lengthAbi: 'allAccountsLength', itemAbi: 'allAccounts', target: factory, })
 
@@ -113,30 +276,24 @@ async function tvl (api) {
     }
 
     await Promise.all(requestBatches.map(async (accountGroup) => {
-      try {
-        const addressParams = accountGroup.map(addr => `account_addresses=${addr}`).join('&');
-        const assetDataCall = await utils.fetchURL(`https://api.arcadia.finance/v1/api/accounts/spot_asset_data?${addressParams}&chain_id=8453`);
+      const assetDataCall = await fetchAssetData(accountGroup, chainId);
 
-        // Process each account's data from the batched response
-        assetDataCall.data.forEach((assetData, index) => {
-          const account = accountGroup[index];
-          if (!assetData || !assetData[0][0] || assetData[0][0].length < 1) return;
+      // Process each account's data from the batched response
+      assetDataCall.data.forEach((assetData, index) => {
+        const account = accountGroup[index];
+        if (!assetData || !assetData[0][0] || assetData[0][0].length < 1) return;
 
-          ownerTokens.push([assetData[0][0], account])
-          if (!assetData[0][0].length || !assetData[0][1].length || assetData[0][1] == "0") return;
-          ownerIds.push([assetData[0][0], assetData[0][1], account])
-          accs.push(account)
+        ownerTokens.push([assetData[0][0], account])
+        if (!assetData[0][0].length || !assetData[0][1].length || assetData[0][1] == "0") return;
+        ownerIds.push([assetData[0][0], assetData[0][1], account])
+        accs.push(account)
 
-          for (let i = 0; i < assetData[0][0].length; i++) {
-            if (assetData[0][0][i] === uniV4NFT) {
-              uniV4Ids.push(assetData[0][1][i]);
-            }
+        for (let i = 0; i < assetData[0][0].length; i++) {
+          if (assetData[0][0][i] === uniV4NFT) {
+            uniV4Ids.push(assetData[0][1][i]);
           }
-        });
-      } catch (error) {
-        console.log(`Failed to fetch/process data for accounts ${accountGroup.join(', ')}:`, error);
-        return;
-      }
+        }
+      });
     }));
 
     api.log(`[arcadia] Processed batch ${Math.ceil((i + accountsPerBatch) / accountsPerBatch)} of ${Math.ceil(v2Accounts.length / accountsPerBatch)} for v2 accounts.`);
@@ -163,10 +320,10 @@ async function tvl (api) {
     await sumTokens2({ api, owners: accs, uniV3ExtraConfig: { nftAddress: alienBaseNFT } })
 
   // add all simple ERC20s
-  await api.sumTokens({ ownerTokens, blacklistedTokens: [uniNFT, uniV4NFT, slipNFT, slipV2NFT, wAeroNFT, sAeroNFT, sSlipNFT, sSlipV2NFT, alienBaseNFT, wsSlipNFT, wsSlipV2NFT],});
+  await api.sumTokens({ ownerTokens, blacklistedTokens: allNfts });
 
   // add all Arcadia-wrapped LP positions
-  await unwrapArcadiaAeroLP({ api, ownerIds });
+  await unwrapArcadiaAeroLP({ api, ownerIds, chainConfig });
 
   // add all native LP positions
   // first add all uniswap v4 positions, without the owner(s) param
@@ -174,18 +331,21 @@ async function tvl (api) {
   if (uniV4Ids.length > 0) {
     await sumTokens2({ api, resolveUniV4: true, uniV4ExtraConfig: {"positionIds":uniV4Ids}})
   }
-  return sumTokens2({ api, owners: accs, resolveUniV3: true, resolveSlipstream: true, resolveSlipstreamV2: true})
+  return sumTokens2({ api, owners: accs, resolveUniV3: true, resolveSlipstream: !!slipNFT, resolveSlipstreamV2: !!resolveSlipstreamV2, resolveSlipstreamV3: !!resolveSlipstreamV3, resolveMetadexCL: !!metadexCLNFT })
 }
 
 module.exports = {
   methodology: "TVL is calculated as the sum of all Account values and the available balance in the liquidity pools. Assets are not double counted.",
-  base: { tvl },
   isHeavyProtocol: true,
   start: '2024-03-25', // Mon Mar 25 2024 18:00:00 GMT+0000
   hallmarks: [
     ["2024-04-03", "Points program announced."],
   ],
 };
+
+Object.keys(config).forEach(chain => {
+  module.exports[chain] = { tvl };
+});
 
 const abi = {
   generateAssetData: 'function generateAssetData() view returns (address[] assets, uint256[], uint256[])',
